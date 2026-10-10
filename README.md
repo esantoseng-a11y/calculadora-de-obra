@@ -1,0 +1,1 @@
+Projeto funcional simplificado baseado nas formulas identificadas da planilha. Execute: python app.py
