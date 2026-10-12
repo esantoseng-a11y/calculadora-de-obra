@@ -10,7 +10,6 @@
     body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f6f8; color: #333; }
     .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
     h1, h2 { color: #1a365d; text-align: center; margin-bottom: 5px; }
-    .subtitle { text-align: center; color: #666; margin-bottom: 20px; font-size: 14px; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
     @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
     .form-group { display: flex; flex-direction: column; }
@@ -44,7 +43,7 @@
       <div class="form-group"><label>Comprimento Paredes (m):</label><input type="number" id="comprimento_paredes" value="75" step="0.01"></div>
       <div class="form-group"><label>Pé Direito (m):</label><input type="number" id="pe_direito" value="2.8" step="0.1"></div>
       <div class="form-group"><label>Área Portas/Janelas (m²):</label><input type="number" id="area_portas_janelas" value="16.14" step="0.01"></div>
-      <div class="form-group"><label>Casa de Banho / Banheiros:</label><input type="number" id="banheiros" value="3"></div>
+      <div class="form-group"><label>Banheiros:</label><input type="number" id="banheiros" value="3"></div>
       <div class="form-group"><label>Cozinhas:</label><input type="number" id="cozinhas" value="1"></div>
       <div class="form-group"><label>Áreas de Serviço:</label><input type="number" id="areas_servico" value="1"></div>
       <div class="form-group"><label>Pontos Elétricos:</label><input type="number" id="pontos_eletricos" value="40"></div>
@@ -73,8 +72,8 @@
 </div>
 
 <script>
-  // ATENÇÃO: Substitua pelo URL real da sua API hospedada no Render
-  const API_URL = "https://SEU-APP.onrender.com/calcular";
+  // URL da sua API já configurada com o link do Render
+  const API_URL = "https://calculadora-de-obra.onrender.com/calcular";
 
   async function calcularObra() {
     const dados = {
@@ -98,7 +97,7 @@
       const res = await response.json();
       exibirResultados(res);
     } catch (error) {
-      alert("Erro ao ligar à API no Render. Verifique o link fornecido.");
+      alert("Erro ao conectar à API no Render. Verifique a ligação à internet.");
       console.error(error);
     }
   }
@@ -122,7 +121,7 @@
       <tr style="background:#e6fffa;"><td><strong>Custo por m²</strong></td><td><strong>R$ ${res.custo_m2.toLocaleString('pt-BR', {minimumFractionDigits: 2})} / m²</strong></td></tr>
     `;
 
-    // Cálculo das datas (Emissão e Validade de 7 dias)
+    // Data atual e validade exata de 7 dias
     const hoje = new Date();
     const validade = new Date();
     validade.setDate(hoje.getDate() + 7);
@@ -130,7 +129,7 @@
     const formatarData = (d) => d.toLocaleDateString('pt-BR');
 
     document.getElementById('dataEmissao').innerText = `Data de Emissão: ${formatarData(hoje)}`;
-    document.getElementById('textoValidade').innerText = `* Este orçamento é válido até ${formatarData(validade)} (7 dias a contar da data de emissão).`;
+    document.getElementById('textoValidade').innerText = `* Este orçamento possui validade de 7 dias, até ${formatarData(validade)}.`;
 
     document.getElementById('resultado').style.display = 'block';
     document.getElementById('btnPdf').style.display = 'inline-block';
@@ -152,4 +151,3 @@
 
 </body>
 </html>
-      
