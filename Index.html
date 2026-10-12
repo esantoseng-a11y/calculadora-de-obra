@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Obra - BEC ENGENHARIA</title>
+  <!-- Biblioteca para gerar PDF diretamente no navegador -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f6f8; color: #333; }
+    .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h1, h2 { color: #1a365d; text-align: center; margin-bottom: 5px; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 20px; font-size: 14px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+    .form-group { display: flex; flex-direction: column; }
+    label { font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #4a5568; }
+    input { padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 14px; }
+    .actions { margin-top: 20px; display: flex; gap: 10px; justify-content: center; }
+    button { padding: 12px 20px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; }
+    .btn-calc { background-color: #2b6cb0; color: white; }
+    .btn-pdf { background-color: #2f855a; color: white; display: none; }
+    #resultado { margin-top: 30px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 13px; }
+    th { background-color: #edf2f7; }
+    .validade { margin-top: 15px; text-align: center; font-size: 12px; color: #c53030; font-weight: bold; }
+    .header-pdf { text-align: center; border-bottom: 2px solid #1a365d; padding-bottom: 10px; margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+
+<div class="container" id="conteudo-relatorio">
+  
+  <div class="header-pdf">
+    <h1>BEC ENGENHARIA</h1>
+    <p style="margin:0; font-size: 13px;">Contacto: (17) 99762-9708</p>
+    <p style="margin:3px 0 0 0; font-size: 12px; color: #4a5568;">Orçamento & Quantitativo Estimativo de Obra</p>
+  </div>
+
+  <form id="calcForm">
+    <div class="form-grid">
+      <div class="form-group"><label>Área Construída (m²):</label><input type="number" id="area_construida" value="60" step="0.01"></div>
+      <div class="form-group"><label>Comprimento Paredes (m):</label><input type="number" id="comprimento_paredes" value="75" step="0.01"></div>
+      <div class="form-group"><label>Pé Direito (m):</label><input type="number" id="pe_direito" value="2.8" step="0.1"></div>
+      <div class="form-group"><label>Área Portas/Janelas (m²):</label><input type="number" id="area_portas_janelas" value="16.14" step="0.01"></div>
+      <div class="form-group"><label>Casa de Banho / Banheiros:</label><input type="number" id="banheiros" value="3"></div>
+      <div class="form-group"><label>Cozinhas:</label><input type="number" id="cozinhas" value="1"></div>
+      <div class="form-group"><label>Áreas de Serviço:</label><input type="number" id="areas_servico" value="1"></div>
+      <div class="form-group"><label>Pontos Elétricos:</label><input type="number" id="pontos_eletricos" value="40"></div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn-calc" onclick="calcularObra()">Calcular Resumo</button>
+      <button type="button" id="btnPdf" class="btn-pdf" onclick="gerarPDF()">Salvar e Gerar PDF</button>
+    </div>
+  </form>
+
+  <div id="resultado" style="display: none;">
+    <h2>Resumo da Estimativa</h2>
+    <div id="dataEmissao" style="text-align: center; font-size: 12px; color: #718096; margin-bottom: 10px;"></div>
+    
+    <table>
+      <thead>
+        <tr><th>Item / Material</th><th>Quantidade / Valor</th></tr>
+      </thead>
+      <tbody id="tabelaResultados"></tbody>
+    </table>
+
+    <div class="validade" id="textoValidade"></div>
+  </div>
+
+</div>
+
+<script>
+  // ATENÇÃO: Substitua pelo URL real da sua API hospedada no Render
+  const API_URL = "https://SEU-APP.onrender.com/calcular";
+
+  async function calcularObra() {
+    const dados = {
+      area_construida: parseFloat(document.getElementById('area_construida').value),
+      comprimento_paredes: parseFloat(document.getElementById('comprimento_paredes').value),
+      pe_direito: parseFloat(document.getElementById('pe_direito').value),
+      area_portas_janelas: parseFloat(document.getElementById('area_portas_janelas').value),
+      banheiros: parseInt(document.getElementById('banheiros').value),
+      cozinhas: parseInt(document.getElementById('cozinhas').value),
+      areas_servico: parseInt(document.getElementById('areas_servico').value),
+      pontos_eletricos: parseInt(document.getElementById('pontos_eletricos').value)
+    };
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+      });
+
+      const res = await response.json();
+      exibirResultados(res);
+    } catch (error) {
+      alert("Erro ao ligar à API no Render. Verifique o link fornecido.");
+      console.error(error);
+    }
+  }
+
+  function exibirResultados(res) {
+    const tabela = document.getElementById('tabelaResultados');
+    tabela.innerHTML = `
+      <tr><td>Área de Paredes</td><td>${res.area_paredes} m²</td></tr>
+      <tr><td>Concreto Fundação</td><td>${res.concreto_fundacao} m³</td></tr>
+      <tr><td>Aço Fundação</td><td>${res.aco_fundacao} kg</td></tr>
+      <tr><td>Concreto Estrutura</td><td>${res.concreto_estrutura} m³</td></tr>
+      <tr><td>Aço Estrutura</td><td>${res.aco_estrutura} kg</td></tr>
+      <tr><td>Tijolos / Blocos</td><td>${res.tijolos} un</td></tr>
+      <tr><td>Pontos de Água</td><td>${res.pontos_agua} un</td></tr>
+      <tr><td>Eletroduto</td><td>${res.eletroduto} m</td></tr>
+      <tr><td>Fio 2.5mm²</td><td>${res.fio_25mm} m</td></tr>
+      <tr><td>Disjuntores</td><td>${res.disjuntores} un</td></tr>
+      <tr><td><strong>Materiais (Total)</strong></td><td><strong>R$ ${res.materiais.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong></td></tr>
+      <tr><td><strong>Mão de Obra</strong></td><td><strong>R$ ${res.mao_obra.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong></td></tr>
+      <tr style="background:#e6fffa;"><td><strong>Custo Total Estimado</strong></td><td><strong>R$ ${res.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong></td></tr>
+      <tr style="background:#e6fffa;"><td><strong>Custo por m²</strong></td><td><strong>R$ ${res.custo_m2.toLocaleString('pt-BR', {minimumFractionDigits: 2})} / m²</strong></td></tr>
+    `;
+
+    // Cálculo das datas (Emissão e Validade de 7 dias)
+    const hoje = new Date();
+    const validade = new Date();
+    validade.setDate(hoje.getDate() + 7);
+
+    const formatarData = (d) => d.toLocaleDateString('pt-BR');
+
+    document.getElementById('dataEmissao').innerText = `Data de Emissão: ${formatarData(hoje)}`;
+    document.getElementById('textoValidade').innerText = `* Este orçamento é válido até ${formatarData(validade)} (7 dias a contar da data de emissão).`;
+
+    document.getElementById('resultado').style.display = 'block';
+    document.getElementById('btnPdf').style.display = 'inline-block';
+  }
+
+  function gerarPDF() {
+    const elemento = document.getElementById('conteudo-relatorio');
+    const opcoes = {
+      margin:       10,
+      filename:     'Orcamento_BEC_Engenharia.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opcoes).from(elemento).save();
+  }
+</script>
+
+</body>
+</html>
+      
